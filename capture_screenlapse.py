@@ -42,7 +42,8 @@ Screen_Type_Selected = Screen_Type[0]
 
 Threads = None
 image_Count = 0
-AppFocus = True
+AppFocus = False
+
 
 def Thread_Work( id , bgExecute , label ):
 
@@ -108,6 +109,42 @@ def getImageCount( inVar ):
 	return temp
 
 
+
+
+
+
+Time_Total = 0;
+Time_ReadOut = '00:00:00';
+
+
+
+
+def timeAdd():
+	global Speed_Adjust
+	global Time_Total
+	global Time_ReadOut
+
+	Time_Total += Speed_Adjust
+
+
+	def timeStr( t, minLength ):
+		temp = str(t)
+		if( len(temp) < minLength ):
+			return '0' + temp	
+		else:
+			return temp	
+
+
+	temp = round( Time_Total, 2)
+	
+	time_secs = timeStr( int( temp % 60 ), 2)
+	time_mins = timeStr( int( (temp/60) % 60 ), 2)
+	time_hrs = timeStr( int( ((temp/60)/60) % 60 ), 2)
+
+	Time_ReadOut = time_hrs + ':' + time_mins + ':' + time_secs
+
+
+
 def Image_Shot():
 	global AppFocus
 	if Image_CurrentApp() in Record_Apps or AppFocus == 0:		
@@ -116,6 +153,7 @@ def Image_Shot():
 		global Screen_Type_Selected
 		global image_Count
 		image_Count += 1
+		timeAdd()
 
 		bash_PathChar = '"'
 		bash_FileName = 'Screen'
@@ -146,7 +184,7 @@ class Capture_Gui( tk.Frame ):
 		self.grid()
 		self.Create_Gui()
 		self.Adjust_Speed()
-		self.Toggle_OnFocus()	
+		# self.Toggle_OnFocus()	
 
 		
 	def Create_Gui(self):	
@@ -160,14 +198,17 @@ class Capture_Gui( tk.Frame ):
 		var.set( Screen_Type[0] )
 
 		self.speedButton = tk.Button( self, text='1X', command = self.Button_Speed , width = 2 )	
-		self.AppFocusToggle = tk.Checkbutton( self, text='AppFocus', variable=self.checkVar, command = self.Toggle_OnFocus , width = 9 )	
+		# self.AppFocusToggle = tk.Checkbutton( self, text='AppFocus', variable=self.checkVar, command = self.Toggle_OnFocus , width = 9 )	
 		self.countValue = tk.Label( self, text="00" , width = 5 )	
+		self.countTime = tk.Label( self, text="00:00:00" , width = 7 )
+
 		self.close_button = tk.Button(self, text="Close", command = self.Button_Close , width = 3 )	
 
 		self.captureButton.grid(row=0, column=0 , sticky="ew" )
 		self.ScreenOpts.grid(row=0, column=1 , sticky="ew" )
 		self.speedButton.grid(row=0, column=2 , sticky="ew" )
-		self.AppFocusToggle.grid(row=0, column=3 , sticky="ew" )
+		# self.AppFocusToggle.grid(row=0, column=3 , sticky="ew" )
+		self.countTime.grid(row=0 , column =3 , sticky="ew" )
 		self.countValue.grid(row=0 , column =4 , sticky="ew" )
 		self.close_button.grid(row=0, column=5, sticky="ew" )
 
@@ -175,8 +216,13 @@ class Capture_Gui( tk.Frame ):
 		global Screen_Type_Selected
 		Screen_Type_Selected = selectedList
 
+	def Label_Count_Time(self):
+		global Time_ReadOut
+		self.countTime.config( text = Time_ReadOut )
+
 	def Label_Count_Update(self):
 		global image_Count
+		self.Label_Count_Time()
 		self.countValue.config( text = image_Count )
 
 	def Button_StartPause(self):
@@ -189,9 +235,9 @@ class Capture_Gui( tk.Frame ):
 			self.inProgress = False
 			Thread_Stop()
 
-	def Toggle_OnFocus(self):
-		global AppFocus
-		AppFocus = self.checkVar.get()
+	# def Toggle_OnFocus(self):
+	# 	global AppFocus
+	# 	AppFocus = self.checkVar.get()
 
 	def Button_Speed(self):
 		if self.currentSpeed == 0.1:	
